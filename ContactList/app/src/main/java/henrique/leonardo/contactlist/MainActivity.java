@@ -1,6 +1,7 @@
 package henrique.leonardo.contactlist;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -30,6 +31,9 @@ public class MainActivity extends AppCompatActivity {
     List<Contact> contacts = new ArrayList<Contact>();
     ListView contactListView;
     ImageView contactImageImgView;
+    Uri imageURI = Uri.parse("android.resource://henrique.leonardo.contactlist/drawable/no_user_logo.png");
+    DatabaseHandler dbHandler;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         emailTxt = (EditText) findViewById(R.id.edtEmail);
         addressTxt = (EditText) findViewById(R.id.edtAddress);
         contactImageImgView = (ImageView) findViewById(R.id.imgViewContactImage);
+        dbHandler = new DatabaseHandler(getApplicationContext());
 
         TabHost tabHost = (TabHost) findViewById(R.id.tabHost);
 
@@ -72,8 +77,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View view){
-                addContact(nameText.getText().toString(), phoneText.getText().toString(),
-                            emailTxt.getText().toString(), addressTxt.getText().toString());
+                Contact contact = new Contact(dbHandler.getContactCount(), String.valueOf(nameText.getText()),
+                        String.valueOf(phoneText.getText()), String.valueOf(emailTxt.getText()), String.valueOf(addressTxt.getText()),
+                        imageURI);
+                dbHandler.createContact(contact);
+                contacts.add(contact);
                 populateList();
                 Toast.makeText(getApplicationContext(), "Your Contact has been created", Toast.LENGTH_SHORT).show();
             }
@@ -108,22 +116,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        List<Contact> addableContacts = dbHandler.getAllContacts();
+        int contactCount = dbHandler.getContactCount();
+
+        for (int i=0; i<contactCount; i++){
+            contacts.add(addableContacts.get(i));
+        }
+        if (!addableContacts.isEmpty()){
+            populateList();
+        }
+
     }
 
     public void onActivityResult(int pReqCode, int pResCode, Intent data){
         if (pResCode == RESULT_OK){
-            if (pReqCode == 1)
+            if (pReqCode == 1) {
+                imageURI = data.getData();
                 contactImageImgView.setImageURI(data.getData());
+            }
         }
     }
 
     private void populateList(){
         ArrayAdapter<Contact> adapter = new ContactListAdapter();
         contactListView.setAdapter(adapter);
-    }
-
-    private void addContact(String pName, String pPhone, String pEmail, String pAddress){
-        contacts.add(new Contact(pName, pPhone, pEmail, pAddress));
     }
 
     private class ContactListAdapter extends ArrayAdapter<Contact>{
@@ -145,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
             email.setText(currentContact.getEmail());
             TextView address = (TextView) view.findViewById(R.id.contactAddress);
             address.setText(currentContact.getAddress());
-
+            ImageView ivContactImage = (ImageView) view.findViewById(R.id.ivContactImage);
+            ivContactImage.setImageURI(currentContact.getImageUri());
             return view;
         }
     }
