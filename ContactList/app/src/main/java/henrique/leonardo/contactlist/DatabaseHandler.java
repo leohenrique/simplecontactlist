@@ -110,9 +110,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_EMAIL, pContact.getEmail());
         values.put(KEY_IMAGE_URI, pContact.getImageUri().toString());
 
-        int aReturn = db.update(TABLE_CONTACTS, values, KEY_ID + "=?", new String[]{String.valueOf(pContact.getId())});
+        int aRowsAffected = db.update(TABLE_CONTACTS, values, KEY_ID + "=?", new String[]{String.valueOf(pContact.getId())});
         db.close();
-        return aReturn;
+        return aRowsAffected;
     }
 
     public List<Contact> getAllContacts(){
@@ -122,16 +122,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()){
             do {
-                Contact contact = new Contact(
-                        Integer.parseInt(cursor.getString(0)),
-                        cursor.getString(1),
-                        cursor.getString(2),
-                        cursor.getString(3),
-                        cursor.getString(4),
-                        Uri.parse(cursor.getString(5)));
-                contacts.add(contact);
+                contacts.add(new Contact(Integer.parseInt(cursor.getString(0)), cursor.getString(1), cursor.getString(2),  cursor.getString(3), cursor.getString(4), Uri.parse(cursor.getString(5))));
             } while (cursor.moveToNext());
         }
+        cursor.close();
+        db.close();
         return contacts;
     }
 }
