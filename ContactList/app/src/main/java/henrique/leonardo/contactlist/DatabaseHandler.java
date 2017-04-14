@@ -130,3 +130,4 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return contacts;
     }
 }
+
